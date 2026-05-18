@@ -1,5 +1,7 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import { config } from './config';
+import { logger } from './logger';
+import { connectDb } from './db';
+import './redis';
 
 import express from 'express';
 
@@ -7,6 +9,8 @@ const app = express();
 
 app.use(express.json());
 
+
+connectDb();
 
 app.get('/health', (req, res) => {
     res.json({
@@ -16,7 +20,7 @@ app.get('/health', (req, res) => {
 });
 
 
-const PORT  = process.env.PORT || 3000;
+const PORT  = config.port || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
