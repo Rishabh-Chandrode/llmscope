@@ -1,0 +1,7 @@
+{
+  "name": "llmscope",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @llmscope/backend dev"
+  }
+}
