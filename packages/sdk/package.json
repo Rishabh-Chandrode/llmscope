@@ -1,15 +1,26 @@
 {
   "name": "@llmscope/sdk",
   "version": "0.1.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "LLMScope SDK — trace your LLM API calls",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": ["dist"],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^25.8.0",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
