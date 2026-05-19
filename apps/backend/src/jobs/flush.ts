@@ -3,6 +3,7 @@ import { query } from '../db.js';
 import { calculateCost } from '../services/cost.js';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
+import { flushDurationMs, tracesFlushedTotal } from '../routes/matrics.js';
 
 type BufferedTrace  = {
   traceId: string;
@@ -79,6 +80,7 @@ async function flushTracesToPostgres(): Promise<void> {
 
   try {
     await query(insertSQL, values);
+    tracesFlushedTotal.inc(traces.length);
     logger.debug({ count: traces.length }, 'FlushJob: traces written to PostgreSQL');
   } catch (err) {
     console.log(values);
@@ -92,15 +94,14 @@ async function flushTracesToPostgres(): Promise<void> {
 
 export function startFlushJob(): void {
   logger.info({ intervalMs: config.flushIntervalMs }, 'FlushJob started');
-
   setInterval(async () => {
-    const startTime = Date.now();
+    const timer = flushDurationMs.startTimer();
     try {
       await flushTracesToPostgres();
-      logger.debug({ durationMs: Date.now() - startTime }, 'FlushJob cycle complete');
     } catch (err) {
-      
-      logger.error({ err, durationMs: Date.now() - startTime }, 'FlushJob cycle failed');
+      logger.error({ err }, 'FlushJob: cycle failed');
+    } finally {
+      timer();
     }
   }, config.flushIntervalMs);
 }

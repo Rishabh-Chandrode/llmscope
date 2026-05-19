@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { redis } from '../redis.js';
 import { logger } from '../logger.js';
+import { ingestHttpDurationMs, tracesIngestedTotal } from './matrics.js';
 
 export const ingestRouter: Router = Router();
 
@@ -25,6 +26,7 @@ const tracePayloadSchema = z.object({
 export type TracePayload = z.infer<typeof tracePayloadSchema>;
 
 ingestRouter.post('/', async (req: Request, res: Response) => {
+  const timer = ingestHttpDurationMs.startTimer();
   const parsed = tracePayloadSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -32,6 +34,7 @@ ingestRouter.post('/', async (req: Request, res: Response) => {
       error: 'Validation failed',
       details: parsed.error.flatten().fieldErrors,
     });
+    timer();
     return;
   }
 
@@ -48,12 +51,14 @@ ingestRouter.post('/', async (req: Request, res: Response) => {
     await redis.lpush('traces:buffer', JSON.stringify(bufferedTrace));
 
     logger.debug({ traceId, appId: req.appId }, 'Trace buffered in Redis');
-
     
     res.status(202).json({ traceId });
-
+    tracesIngestedTotal.inc();
   } catch (err) {
+   
     logger.error({ err }, 'Ingest failed');
     res.status(500).json({ error: 'Failed to ingest trace' });
+  } finally {
+    timer();
   }
 });

@@ -13,6 +13,11 @@ import { startFlushJob } from './jobs/flush.js';
 
 
 import './redis.js';
+import { queryRouter } from './routes/query.js';
+import { metricsRouter, startMetricsPolling } from './routes/matrics.js';
+import { alertsRouter } from './routes/alerts.js';
+import { startAggregateJob } from './jobs/aggregate.js';
+import { startAlertJob } from './jobs/alerts.js';
 
 async function main() {
   
@@ -36,8 +41,11 @@ async function main() {
 
   
   app.use('/apps', appsRouter);
+  app.use('/metrics', metricsRouter);
+  
   app.use('/ingest', authMiddleware, ingestRouter);
-
+  app.use('/', authMiddleware, queryRouter);
+  app.use('/alerts', authMiddleware, alertsRouter);
   
   
   app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -50,6 +58,9 @@ async function main() {
 
     
     startFlushJob();
+    startAggregateJob();
+    startAlertJob();
+    startMetricsPolling();
   });
 }
 
