@@ -1,0 +1,4 @@
+src/
+test-local.ts
+tsconfig.json
+*.tsbuildinfo
