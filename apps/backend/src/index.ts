@@ -20,17 +20,17 @@ import { startAggregateJob } from './jobs/aggregate.js';
 import { startAlertJob } from './jobs/alerts.js';
 
 async function main() {
-  
+
   await connectDb();
 
   const app = express();
 
-  
+
   app.use(helmet());
   app.use(cors());
   app.use(express.json({ limit: '1mb' }));
 
-  
+
   app.get('/health', (req, res) => {
     res.json({
       status: 'ok',
@@ -39,15 +39,15 @@ async function main() {
     });
   });
 
-  
+
   app.use('/apps', appsRouter);
   app.use('/metrics', metricsRouter);
-  
+
   app.use('/ingest', authMiddleware, ingestRouter);
   app.use('/', authMiddleware, queryRouter);
   app.use('/alerts', authMiddleware, alertsRouter);
-  
-  
+
+
   app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
     logger.error({ err }, 'Unhandled error');
     res.status(500).json({ error: 'Internal server error' });
@@ -56,7 +56,7 @@ async function main() {
   app.listen(config.port, () => {
     logger.info({ port: config.port }, 'LLMScope backend started');
 
-    
+
     startFlushJob();
     startAggregateJob();
     startAlertJob();
